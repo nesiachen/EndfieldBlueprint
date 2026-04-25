@@ -1,43 +1,60 @@
 # AGENTS.md
 
-## Project
-
-基于 Arknights: Endfield 的蓝图规划工具。React 19 + TypeScript 6 + Vite 8 + Tailwind CSS 3，使用 react-konva 渲染画布网格。
-
-## 已完成内容
-
-- 项目初始化（Vite + React + TS + Tailwind + ESLint）
-- 核心类型定义 `src/types/layout.d.ts`：`Device`、`IOPort`、`GridConfig`
-- 主布局 `App.tsx`：左侧设备栏 + 主画布区域 flex 布局
-- `GridCanvas.tsx`：基于 Konva Stage 的网格画布，支持鼠标滚轮缩放（以指针为中心）、拖拽平移、ResizeObserver 自适应
-- `EquipmentBar.tsx`：静态设备列表（组装机、传送带、起点、终点）
-
-## 空占位文件（待实现）
-
-- `src/components/GridLayout/Device.tsx`
-- `src/components/GridLayout/PathEditor.tsx`
-- `src/components/UI/PropertiesPanel.tsx`
+基于 Arknights: Endfield 的蓝图规划工具。React 19 + TypeScript 6 + Vite 8 + Tailwind CSS 3，react-konva 渲染画布。
 
 ## 命令
 
-| 命令 | 说明 |
-|------|------|
-| `npm run dev` | Vite 开发服务器 |
-| `npm run build` | `tsc -b && vite build`（类型检查 + 构建） |
-| `npm run lint` | ESLint |
-| `npm run preview` | Vite 预览 |
+| 命令              | 说明                   |
+| ----------------- | ---------------------- |
+| `npm run dev`     | Vite 开发服务器        |
+| `npm run build`   | `tsc -b && vite build` |
+| `npm run lint`    | ESLint                 |
+| `npm run preview` | Vite 预览              |
+
+## 目录结构
+
+```
+src/
+├── data/                # 唯一有实现代码的目录
+│   ├── equipment.ts     # 22个设备模板
+│   ├── recipes.ts       # 配方库
+│   └── constants.ts     # 传送带/管道速率常量
+├── components/          # 画布/UI组件（当前为空存根）
+├── core/                # 纯逻辑（当前为空存根）
+├── state.ts             # 全局状态（空存根）
+├── types.ts             # 类型定义（空存根）
+└── utils.ts             # 工具函数（空存根）
+```
 
 ## 代码约定
 
-- **`verbatimModuleSyntax`** 启用：类型导入必须用 `import type { ... }`
-- **`erasableSyntaxOnly`** 启用：禁止 enum、namespace，用 const 对象 + type 替代
-- **`noUnusedLocals` / `noUnusedParameters`** 启用：未使用的变量或参数会报错
-- 编辑器配置存储在 `.vscode/`
+## 设计原则
+
+整个系统遵循严格的分层架构，核心原则可归纳为：
+
+### 第一原则：逻辑归网格，显示归像素
+
+所有逻辑数据必须以整数网格坐标 (x, y) 为唯一真实坐标体系——设备位置、IO 连接点、传送带路径都必须依附于网格。像素只承担渲染职责，用于将网格坐标转换为屏幕显示位置。两者严格解耦。
+
+### 分层架构（自底向上）
+
+| 层 | 职责 | 约束 |
+|---|---|---|
+| **Grid 网格世界** | 所有逻辑的坐标基准 | 坐标必须是整数 (x, y)，像素坐标由网格坐标映射而来 |
+| **设备系统** | 实例记录位置/类型/配方，模板定义占地/IO/物料类型 | 设备本身不参与物流计算，只作为承载生产逻辑的节点 |
+| **IO 系统** | 将设备端口映射到网格边缘，判断某格子是否为输出口、可否作为连接起点/终点 | 只负责规则判断，不负责路径生成，也不负责渲染 |
+| **传送带/管道系统** | 连接两个 IO 点，承担物料运输，记录连接关系/方向链/物料类型/吞吐速率 | 路径必须严格沿网格正交移动（水平/垂直），不允许斜线或曲线；拐点只能在网格交叉点上 |
+| **路径系统** | 几何生成，将起点/终点转换为 L 形或多段直角折线路径 | 只保证路径在网格世界中合法且可绘制，不参与 IO 判断和生产逻辑 |
+| **生产系统** | 基于配方计算资源消耗与产出速率，判断平衡与瓶颈 | 汇总所有设备生产状态，形成全局资源流动图 |
+| **Canvas 渲染层** | 分层渲染（网格层/设备层/传送带层/IO 层） | 纯视觉表现，不参与任何逻辑计算 |
+
+### 总结
+
+网格系统提供空间基准 → IO 系统提供连接规则 → 传送带系统在网格约束下生成直角物流路径 → 生产系统负责资源计算 → 渲染层只是这些系统的可视化结果。所有复杂性被分层隔离，最终共同组成一个可编辑、可模拟的工厂运行世界。
+
+## 代码约定
+
+- `verbatimModuleSyntax`：类型导入必须用 `import type { ... }`
+- `erasableSyntaxOnly`：禁止 enum、namespace
+- `noUnusedLocals` / `noUnusedParameters` 启用
 - 构建产物输出到 `dist/`，已 gitignore
-
-## 依赖注意
-
-- `react-konva`：画布渲染（Konva.js React 绑定），需通过 Stage → Layer → Shape 组织
-- `@use-gesture/react`：已安装但尚未使用
-- 无测试框架（jest/vitest/playwright 均未安装）
-- TypeScript 版本为 6.0 beta，注意与旧版本差异
