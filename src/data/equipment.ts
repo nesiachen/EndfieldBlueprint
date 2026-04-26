@@ -9,10 +9,10 @@ export interface EquipmentTemplate {
   elevation: number;
   icon: string;
   ioSides: {
-    top: string[];
-    bottom: string[];
-    left: string[];
-    right: string[];
+    top: (typeof PortType)[keyof typeof PortType][];
+    bottom: (typeof PortType)[keyof typeof PortType][];
+    left: (typeof PortType)[keyof typeof PortType][];
+    right: (typeof PortType)[keyof typeof PortType][];
   };
 }
 

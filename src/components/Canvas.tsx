@@ -1,8 +1,9 @@
 import { useEffect, useState, Fragment, useRef } from "react";
 import { GRID_CELL_SIZE, pixelToGrid } from "../core/grid";
-import { Layer, Stage, Line, Text, Rect } from "react-konva";
+import { Layer, Stage, Line, Text, Rect, Group, Circle, Arrow } from "react-konva";
 import type { PlacedDevice } from "../types";
 import { equipmentCatalog } from "../data/equipment";
+import { getDeviceIOPorts } from "../core/io";
 
 interface CanvasProps {
   selectedTemplateId: string | null;
@@ -72,6 +73,41 @@ export default function Canvas({ selectedTemplateId, placedDevices, onPlaceDevic
             const px = d.x * GRID_CELL_SIZE;
             const py = d.y * GRID_CELL_SIZE;
             return <Text key={`name_${d.id}`} x={px + 4} y={py + 4} text={tmpl.name} fontSize={12} fill="#fff" listening={false} />;
+          })}
+        </Layer>
+        {/* IO口层 */}
+        <Layer>
+          {placedDevices.map((d) => {
+            const tmpl = equipmentCatalog[d.templateId];
+            if (!tmpl) return null;
+            return getDeviceIOPorts(d, tmpl).map((port) => {
+              const cx = port.x * GRID_CELL_SIZE + GRID_CELL_SIZE / 2;
+              const cy = port.y * GRID_CELL_SIZE + GRID_CELL_SIZE / 2;
+              const isLiquid = port.type === "LIQUID_INPUT" || port.type === "LIQUID_OUTPUT";
+              const color = isLiquid ? "#ff9800" : "#4caf50";
+
+              const inputArrow: Record<string, number[]> = {
+                up: [0, 3, 0, -5],
+                down: [0, -3, 0, 5],
+                left: [3, 0, -5, 0],
+                right: [-3, 0, 5, 0],
+              };
+              const outputArrow: Record<string, number[]> = {
+                up: [0, -3, 0, 5],
+                down: [0, 3, 0, -5],
+                left: [-3, 0, 5, 0],
+                right: [3, 0, -5, 0],
+              };
+              const isOutput = port.type === "SOLID_OUTPUT" || port.type === "LIQUID_OUTPUT";
+              const points = (isOutput ? outputArrow : inputArrow)[port.direction] ?? [0, 0, 0, 0];
+
+              return (
+                <Group key={`${d.id}-${port.side}${port.sideIndex}`} x={cx} y={cy}>
+                  <Circle radius={8} stroke={color} strokeWidth={1.5} fill="transparent" listening={false} />
+                  <Arrow points={points} stroke={color} fill={color} pointerLength={5} pointerWidth={5} listening={false} />
+                </Group>
+              );
+            });
           })}
         </Layer>
       </Stage>

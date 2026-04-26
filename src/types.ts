@@ -51,3 +51,15 @@ export interface PlacedDevice {
   x: number;
   y: number;
 }
+
+/** IO口 */
+export type Direction = "up" | "down" | "left" | "right";
+export interface IOPort {
+  deviceId: string;
+  side: "top" | "bottom" | "left" | "right";
+  sideIndex: number;
+  x: number;
+  y: number;
+  type: PortType;
+  direction: Direction;
+}
