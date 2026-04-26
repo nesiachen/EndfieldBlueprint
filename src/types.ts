@@ -22,13 +22,6 @@ export type PortType = (typeof PortType)[keyof typeof PortType];
 /** 设备模板ID（所有可用设备的唯一标识） */
 export type EquipmentId = keyof typeof import("./data/equipment").equipmentCatalog;
 
-export interface BeltSpec {
-  id: string;
-  name: string;
-  rate: number;
-  type: "belt" | "pipe";
-}
-
 export interface ItemAmount {
   itemId: string;
   name: string;
@@ -62,4 +55,19 @@ export interface IOPort {
   y: number;
   type: PortType;
   direction: Direction;
+}
+
+/** 传送带 */
+export interface BeltTemplate {
+  id: string;
+  name: string;
+  rate: number;
+  type: "belt" | "pipe";
+}
+export interface BeltInstance {
+  id: string;
+  startDeviceId: string;
+  endDeviceId: string;
+  waypoints: GridCoord[];
+  templateId: string;
 }
