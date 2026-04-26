@@ -10,7 +10,14 @@ export interface PixelCoord {
 }
 
 /** 设备端口物料类型 */
-export type PortType = "SOLID_INPUT" | "SOLID_OUTPUT" | "LIQUID_INPUT" | "LIQUID_OUTPUT" | "NONE";
+export const PortType = {
+  SOLID_INPUT: "SOLID_INPUT",
+  SOLID_OUTPUT: "SOLID_OUTPUT",
+  LIQUID_INPUT: "LIQUID_INPUT",
+  LIQUID_OUTPUT: "LIQUID_OUTPUT",
+  NONE: "NONE",
+} as const;
+export type PortType = (typeof PortType)[keyof typeof PortType];
 
 /** 设备模板ID（所有可用设备的唯一标识） */
 export type EquipmentId = keyof typeof import("./data/equipment").equipmentCatalog;
@@ -35,4 +42,12 @@ export interface Recipe {
   duration: number;
   inputs: ItemAmount[];
   outputs: ItemAmount[];
+}
+
+/** 放置到网格上的设备实例 */
+export interface PlacedDevice {
+  id: string;
+  templateId: string;
+  x: number;
+  y: number;
 }
